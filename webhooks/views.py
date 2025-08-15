@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
@@ -9,9 +10,36 @@ from API import Query, POST
 from .tools.sample_testing_rename_new_item import rename_new_item
 from .tools.create_request_link import request_link
 from .tools.set_reference import set_reference
+from .tools.update_accession import set_accession
 
 
-# Create your views here.
+from sample_testing.reports.label import Label
+from sample_testing import Accession
+
+class Test:
+    def __init__(self):
+        self.last_used=None
+        self.accession=None
+
+    def get_accession(self, data):
+        now = datetime.now()
+        _id = now.strftime("%y-%m-%d-%H-%M-%S")
+        cv = data['event']['columnValues']
+
+        date = datetime.strptime(cv['date_mkn4k66s']['date'], '%Y-%m-%d')
+        accession = Accession(_id=_id,
+                              first_name=cv['short_text_mkn4grfw']['value'],
+                              last_name=cv['short_text_mkn4nm6j']['value'],
+                              dob=date)
+        self.accession = accession
+
+t = Test()
+
+with open('./webhooks/templates/display.html', 'r') as file:
+    wrapper = file.read()
+
+with open('./webhooks/templates/Label.html', 'r') as file:
+    label_wrapper = file.read()
 
 def _payload(request):
     payload = None
@@ -33,9 +61,8 @@ def hook(request):
     payload, response = _payload(request)
     if request.method == 'POST':
         item_id = payload['event']['pulseId']
-        rename_new_item(item_id)
-
-    print(json.dumps(payload, indent=2))
+        t.get_accession(payload)
+        rename_new_item(item_id, t.accession)
 
     return response
 
@@ -64,16 +91,34 @@ def create_request_link(request):
     return response
 
 
-def test(request: HttpRequest) -> HttpResponse:
+@csrf_exempt
+def report_forwarding(request):
+    svg = Label(t.accession).construct()
+
+    page = str(label_wrapper) % (svg,)
+    page.encode('utf8')
+
+    return HttpResponse(page)
+
+
+def update_accessions(request: HttpRequest) -> HttpResponse:
     q = Query()
+    q.boards.items_page.items.created_at.activate()
     q.boards.items_page.items.id.activate()
-    q.boards.arguments = {'ids': 6822391121}
-    q.boards.items_page.arguments = {'limit': 100}
-    a=POST().execute(q)
+    q.boards.items_page.items.name.activate()
 
-    items = [i['id'] for i in a['data']['boards'][0]['items_page']['items']]
+    pending_orders=8479058626
 
+    q.boards.arguments = {'ids': pending_orders}
 
+    post = POST()
+    items = post.execute(q)['data']['boards'][0]['items_page']['items']
 
-    return JsonResponse({'i': items}, status=200)
+    for item in items:
+        set_accession(int(item['id']), datetime.fromisoformat(item['created_at']))
+
+    return HttpResponse(str(items))
+
+def test(request: HttpRequest) -> HttpResponse:
+    return HttpResponse('')
 

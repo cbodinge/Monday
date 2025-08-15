@@ -23,5 +23,6 @@ urlpatterns = [
     path('hooks/', views.hook),
     path('update-reference/', views.update_reference),
     path('create-request-link/', views.create_request_link),
+    path('request-forwarding/', views.report_forwarding),
     path('test/', views.test),
 ]
