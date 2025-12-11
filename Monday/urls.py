@@ -16,13 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from webhooks import views
+from webhooks.views import sample_testing, tests, ticketing
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('hooks/', views.hook),
-    path('update-reference/', views.update_reference),
-    path('create-request-link/', views.create_request_link),
-    path('request-forwarding/', views.report_forwarding),
-    path('test/', views.test),
+    path('hooks/', sample_testing.rename_new_order, name='rename_new_order'),
+    path('rename-pending-orders/', sample_testing.rename_all_pending_orders, name='rename_all_pending_orders'),
+    path('create-request-link/', ticketing.create_request_link, name='create_request_link'),
+    path('update-all-request-links/', ticketing.update_all_request_links, name='update_all_request_links'),
+    path('get-board-ids/', tests.get_board_list),
+    path('test/', tests.test),
+
 ]

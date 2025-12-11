@@ -2,6 +2,7 @@ from .page import Page, font600
 from PSVG import Text
 from ..orders import Order
 from .svg2pdf import process
+from datetime import datetime
 
 
 class Requisition(Page):
@@ -31,7 +32,13 @@ class Requisition(Page):
         self.add_text('Patient', f'{self.order.last_name}, {self.order.first_name}')
         self.add_text('DOB', self.order.dob.strftime('%m/%d/%Y'))
         self.add_text('Matrix', self.order.matrix)
-        self.add_text('Collection Time', self.order.collection_time.strftime('%m/%d/%Y %H:%M'))
+
+        if self.order.collection_time==datetime.min:
+            self.add_text('Collection Time', 'N/A')
+        else:
+            self.add_text('Collection Time', self.order.collection_time.strftime('%m/%d/%Y %H:%M'))
+
+
         self.add_text('Collected By', self.order.collected_by)
         self.add_text('Client', self.order.client)
 

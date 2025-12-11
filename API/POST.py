@@ -12,19 +12,19 @@ class POST:
 
         self.headers = {"Authorization": key}
 
-    def execute(self, query: Query|str):
+    def execute(self, query: Query|str) -> requests.Response:
         payload = {'query': str(query)}
-        r = requests.post(url=self.url, json=payload, headers=self.headers)
+        response = requests.post(url=self.url, json=payload, headers=self.headers)
 
-        return r.json()
+        return response
 
 
 class Mutation(POST):
-    def execute(self, mutation: str):
+    def execute(self, mutation: str) -> requests.Response:
         payload = {'query': mutation}
-        r = requests.post(url=self.url, json=payload, headers=self.headers)
+        response = requests.post(url=self.url, json=payload, headers=self.headers)
 
-        return r.json()
+        return response
 
 
 

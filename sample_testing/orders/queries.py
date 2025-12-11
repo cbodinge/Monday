@@ -1,5 +1,6 @@
 from . import get_order, Order
-from API import POST, Query
+from MondayAPI.Query import Query
+from API import get_all_items
 
 
 def standard_query() -> Query:
@@ -14,33 +15,35 @@ def standard_query() -> Query:
     query.boards.items_page.items.subitems.column_values.value.activate()
     query.boards.items_page.items.subitems.column_values.text.activate()
     query.boards.items_page.items.subitems.name.activate()
+    query.boards.items_page.cursor.activate()
 
     return query
 
 
 def all_finalized_orders() -> list[Order]:
-    post = POST()
     query = standard_query()
-
     query.boards.arguments = {'ids': '[9365780770]'}
+    items = get_all_items(query)
 
-    try:
-        items = post.execute(query)['data']['boards'][0]['items_page']['items']
-    except IndexError:
-        items = []
+    return [get_order(item) for item in items]
+
+
+def all_active_orders() -> list[Order]:
+    query = standard_query()
+    query.boards.arguments = {'ids': '[9365193754]'}
+    items = get_all_items(query)
 
     return [get_order(item) for item in items]
 
 
 def get_order_by_item_id(item_id: int) -> Order:
-    post = POST()
     query = standard_query()
-
     query.boards.items_page.items.arguments['ids'] = f'[{item_id}]'
+    item = query.execute()
 
     try:
-        items = post.execute(query)['data']['boards'][0]['items_page']['items']
-    except IndexError:
-        items = []
+        item = item.data.boards.items_page.items[0]
+    except (IndexError, AttributeError):
+        item = None
 
-    return get_order(items[0])
+    return get_order(item)

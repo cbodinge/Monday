@@ -61,9 +61,7 @@ def hook(request):
     payload, response = _payload(request)
     if request.method == 'POST':
         item_id = payload['event']['pulseId']
-        t.get_accession(payload)
-        rename_new_item(item_id, t.accession)
-
+        set_accession(int(item_id), datetime.now())
     return response
 
 
@@ -81,7 +79,6 @@ def update_reference(request):
 
 @csrf_exempt
 def create_request_link(request):
-    print(request)
     payload, response = _payload(request)
 
     if request.method == 'POST':
@@ -120,5 +117,12 @@ def update_accessions(request: HttpRequest) -> HttpResponse:
     return HttpResponse(str(items))
 
 def test(request: HttpRequest) -> HttpResponse:
-    return HttpResponse('')
+    q = Query()
+    q.boards.id.activate()
+    q.boards.name.activate()
+
+    post = POST()
+    items = post.execute(q).json()['data']
+
+    return JsonResponse(items)
 
